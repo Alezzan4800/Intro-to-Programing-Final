@@ -104,16 +104,23 @@ while True:
 print(f"you rest until it is dusk then leave with the Princess.\n As you cross the boarders a group of orcs attack.")
 
 ## First Battle
+enemy_battlefield=10
 while True:
-    enemy_battlefield=10
+    
     print(enemy_battlefield)
+    print(hero_health)
+
+    if hero_health <= 0:
+        print("You have been beaten back and the princess kidnapped.  You now must go rescue her.")
+        break
     if enemy_battlefield ==0:
+        print("You have beaten them back! Now enjoy and continue")
         break
 
     battle_discussion=int(input(" 1-Ranged Attack \n 2-Melee Attack \n 3-Discussion \n 4-Defend \n 5-Run \n"))
     if battle_discussion==1:
         range_attack=hero_bow_bonus+random.randrange(100)
-        if range_attack >= 60:
+        if range_attack >= 10:
                 enemy_battlefield-=1
         enemy_attack=random.randrange(100)
         if enemy_attack >= 50:
@@ -140,12 +147,13 @@ while True:
         enemy_attack=random.randrange(100)
         if enemy_attack >= 75:
             hero_health -=15
-
+        else:
+            print("You have succesfully defended agsint their attacks. ")
 
     if battle_discussion==5:
         print("no where to go in this battle")
 
-    if battle_discussion<=1 or battle_discussion>=5:
+    if battle_discussion<1 or battle_discussion>5:
         print("This is not an option")
        
 

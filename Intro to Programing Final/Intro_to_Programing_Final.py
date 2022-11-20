@@ -1,22 +1,164 @@
-## This is the global verables
-hero_name="Bill"
-hero_str=0 
-hero_char=0
-hero_int=0
-hero_vit=0
-hero_sword_bonus=40
-hero_bow_bonus=40
-hero_gold=0
-hero_health=100+hero_vit
-hero_lvl=1
-hero_orc_relationship=0
-hero_elf_relationship=0
-hero_dwarf_relationship=0
-hero_human_relationship=50
-## important random
-
 import random
+## This is the global verables
 
+class Hero:
+    def __init__(self, name, strength, charisma, intelligence, vitality, melee_bonus, range_bonus, gold, orc_relationship, elf_relationship, dwarf_realtionship, human_relationship, hit_points, level):
+        self.name= name
+        self.stats = dict()
+        self.stats['strength'] = strength
+        self.stats['charisma'] = charisma
+        self.stats['intelligence'] = intelligence
+        self.stats['vitality'] = vitality
+        self.stats['melee_bonus'] = melee_bonus
+        self.stats['range_bonus'] = range_bonus
+        self.stats['gold'] = gold
+        self.stats['orc_relationship'] = orc_relationship
+        self.stats['elf_relationship'] = elf_relationship
+        self.stats['dwarf_relationship'] = dwarf_realtionship
+        self.stats['human_relationship'] = human_relationship
+        self.stats['hit_points'] = hit_points + vitality
+        self.stats['level'] = level
+        self.weapon = Weapon("fist",5, 10, True)
+    def get_name(self):
+        return self.name
+
+    def set_stat(self, stat_name, value):
+        assert stat_name in self.stats, f"Invalid stat {stat_name}"
+
+        self.stats[stat_name] = value
+    def get_stat(self, stat_name):
+        assert stat_name in self.stats, f"Invalid stat {stat_name}"
+        return self.stats[stat_name]
+    def add_stat(self, stat_name, value):
+        assert stat_name in self.stats, f"Invalid stat {stat_name}"
+
+        self.stats[stat_name] += value
+    def print_character(self):
+        for stat in ['name', 'gold']:
+            print(stat, self.stats[stat])
+        self.weapon = Weapon("fist", 5, 10, True) 
+    
+    def __str__(self):
+        return f"{self.name} {self.stats['hit_points']} {self.stats['strength']} {self.stats['charisma']} {self.stats['intelligence']} {self.stats['vitality']} {self.stats['melee_bonus']} {self.stats['range_bonus']} {self.stats['gold']} {self.stats['orc_relationship']} {self.stats['elf_relationship']} {self.stats['dwarf_relationship']} {self.stats['human_relaionship']} {self.stats['level']}"
+
+    def is_alive(self):
+        return self.stats['hit_points'] > 0
+
+    def take_damage(self, damage):
+        self.stats['hit_points'] -= damage
+        if self.stats['hit_points'] < 0:
+            self.stats['hit_points'] = 0
+        print(f"{self.name} takes {damage} damage. New health is {self.stats['hit_points']}.")
+
+    def equip(self, weapon):
+        self.weapon = weapon
+
+    def attack(self, enemy_combatants, is_attacking_melee):
+       chance_to_hit = self.weapon.to_hit_target()
+       if self.get_equipped_weapon().is_melee():
+            chance_to_hit += self.melee_bonus
+            if is_attacking_melee and chance_to_hit > enemy_combatants.melee_armor:
+                enemy_combatants.melee_take_damage(1)
+            elif is_attacking_melee == False:
+                chance_to_hit -= 20
+                if chance_to_hit > enemy_combatants.ranged_armor:
+                    enemy_combatants.range_take_damage(1)
+            print("you have missed")
+
+       else:
+            chance_to_hit+= self.range_bonus
+            if is_attacking_melee:
+                chance_to_hit -= 20
+                if chance_to_hit > enemy_combatants.melee_armor:
+                    enemy_combatants.melee_take_damage(1)
+            elif chance_to_hit > enemy_combatants.ranged_armor:
+                    enemy_combatants.range_take_damage(1)
+
+    def get_equipped_weapon(self):
+        return self.weapon
+
+class Weapon:
+    def __init__(self, name, base_to_hit, random_to_hit, is_melee):
+        self.name = name
+        self.base_to_hit = base_to_hit
+        self.random_to_hit = random_to_hit
+        self.is_melee_weapon = is_melee
+
+    def __str__(self):
+        return f"{self.name} {self.base_to_hit} - {self.base_to_hit + self.random_to_hit}"
+
+    def to_hit(self):
+        to_hit_target = self.base_to_hit + random.randrange(0, self.random_to_hit)
+        return to_hit_target
+
+    def is_melee(self):
+        return self.is_melee_weapon
+
+    
+class Enemy_Battlefield:
+    def __init__(self, melee_enemies, ranged_enemies, melee_armor, ranged_armor):
+        self.melee_enemies = melee_enemies
+        self.ranged_enemies = ranged_enemies
+        self.melee_armor = melee_armor
+        self.ranged_armor = ranged_armor
+
+    def is_alive(self):
+        return self.melee_enemies > 0 and self.ranged_enemies > 0
+    def range_damage(self,hero):
+        if hero.get_equipped_weapon().is_melee():
+            hero.take_damage(random.randrange(10,15))
+        else:
+            hero.take_damage(10)
+
+    def melee_damage(self, hero):
+        if hero.get_equipped_weapon().is_melee():
+            hero.take_damage(10)
+        else:
+            hero.take_damage(random.randrange(10,15))
+
+    def attack(self, hero):
+        for ii in range(self.ranged_enemies): 
+            self.range_damage(hero)
+        for ii in range(self.melee_enemies):
+            self.melee_damage(hero)
+    def melee_take_damage(self, deaths):
+        self.melee_enemies -= deaths
+        if self.melee_enemies < 0:
+            self.melee_enemies = 0
+    def range_take_damage(self, deaths):
+        self.ranged_enemies -= deaths
+        if self.ranged_enemies < 0:
+            self.ranged_enemies = 0
+
+
+
+sword = Weapon("sword", 0, 100, True)
+bow = Weapon("bow", 0, 100, False)
+
+def input_non_empty_string(promt):
+    while True:
+        user_input = input(promt)
+        if len(user_input) > 0:
+            break
+        print('Input can not be empty.')
+    return user_input
+def input_choices(prompt, choices):
+    print(prompt)
+    for item_num, item in enumerate(choices):
+        print('   ', item_num + 1, item)
+    selection = input_number("choice: ",1,len(choices))
+    return selection
+
+def input_number(prompt, min, max):
+    while True:
+        input_str = input(prompt)
+        if input_str.isdigit():
+          
+            selection = int(input_str)
+            if selection >= min and selection <= max:
+                break
+        print(f"Invalid input must be between {min} and {max} ")
+    return selection 
 ## Story Starts
 def main():
     print(
@@ -31,151 +173,141 @@ def main():
 
     ## Character Creation time
     ## Naming Character
-
+    
     print("Time to create your Character")
-
-    hero_name=input(str("Plesae enter your charcter's name: "))\
-
+    name = input_non_empty_string("Please enter your character's name: ")
+    hero = Hero(name,0,0,0,0,40,40,0,0,0,0,50,100,1 )
+    
+    total_combatants = Enemy_Battlefield(5,5,50,50)
+    total_combatants.attack(hero)
+    
     ##Chosing Background
-    def get_input(prompt, choices):
-        print(prompt)
-        for item_num, item in enumerate(choices):
-            print('   ', item_num + 1, item)
-        selection = 0
-        while True:
-            input_str = input("Choice: ")
-            if input_str.isdigit():
-          
-                selection = int(input_str)
-                if selection > 0 and selection <= len(choices):
-                    break
-            print("Invalid input")
-        #return selection
-        return 0
-
-
-               #background_choice=int(input("Please choose a background\n 1-You grew up as an indentured servant in Gorthomon.\n 2-You grew up a slave to the Orcs.\n 3-You grew up as book keep in Timberwolf. \n 4-You grew up as a prince in Foxborough\n"))
-    background_choice = get_input("Please choose a background", ["You grew up as an indentured servant in Gorthomon.", "You grew up a slave to the Orcs.", "You grew up as book keep in Timberwolf.", "You grew up as a prince in Foxborough"])
+               
+    background_choice = input_choices("Please choose a background", ["You grew up as an indentured servant in Gorthomon.", "You grew up a slave to the Orcs.", "You grew up as book keep in Timberwolf.", "You grew up as a prince in Foxborough"])
     if background_choice==1:
-        hero_str+=5
-        hero_dwarf_relationship+=5
-
+        hero.add_stat('strength', 5)
+        hero.add_stat('dwarf_relationship', 5)
     elif background_choice==2:
-        hero_vit+= 5
-        hero_orc_relationship+=5
-
+        hero.add_stat('vitality', 5)
+        hero.add_stat('orc_relationship',5)
     elif background_choice==3:
-        hero_int+=5
-        hero_elf_relationship+=5
-
+        hero.add_stat('intelligence',5)
+        hero.add_stat('elf_relationship', 5)
     elif background_choice==4:
-        hero_char+=5
-        hero_gold+=100
+        hero.add_stat('charisma', 5)
+        hero.add_stat('gold',100)
     else:
         assert False, "Bug Here"
-
-    aa = 5 + 1
-    assert aa == 6, "bad addition"
 
 
 
     ## Choosing Training
-
-    while True:
-        training_choice=int(input("Please chose a training.\n After leave home you chose to learn the art of:\n 1-Range fighting while traveling with a hunting party. \n 2-Sword fighting while being a squire for some traveling Knights \n 3-Negotiation while traveling with a party of traders. \n"))
-        if training_choice==1:
-            hero_bow_bonus+=5
-            break
-        elif training_choice==2:
-            hero_sword_bonus+=5
-            break
-        elif training_choice==3:
-            hero_char+=5
-            break
-        else:
-            print("Please chose one of the avalabe choices")
+    training_choice = input_choices("Please chose a training. After leave home you chose to learn the art of:", ["Range fighting while traveling with a hunting party.", "Sword fighting while being a squire for some traveling Knights.", "Negotiation while traveling with a party of traders."])
+        
+    if training_choice == 1:
+        hero.add_stat('range_bonus', 5)
+    elif training_choice == 2:
+        hero.add_stat('melee_bonus', 5)      
+    elif training_choice == 3:
+        hero.add_stat("charisma", 5)      
+    else:
+        assert False, "Bug Here"
 
     ## Time for the Game to Start
     ## Story Time
     print("Present Day:\n You have been summoned before the King of Foxborough")
     input()
     print(
-        F"{hero_name}: Hello, King Remzii, you have summoned me today\n"
+        F"{hero.name}: Hello, King Remzii, you have summoned me today\n"
         "King: Yes, PN I have summoned you today to ask you to deliver my daughter Gorthomon for a marriage peace deal.\n"  
         "You will have to travel undercover as it can not be known that we have a peace deal in the works with the Dwarves.\n"
         "we would incur an attack and full-on invasion from the Elfs is this was to become known.\n"
         )
     ## First Conversation playing has control in
     while True:
-        conversation_choice=int(input(" 1-Why would this incur an invasion?\n 2-Why did the Dwarves agree to this deal?\n 3-Ok Sir I will make sure she gets there unharmed and secretly.\n"))
-        if conversation_choice==1:
+        conversation_choice = input_choices("",["Why would this incur an invasion?", "Why did the Dwarves agree to this deal?", "Ok Sir I will make sure she gets there unharmed and secretly."])
+        if conversation_choice == 1:
             print("Elfs have long for a true reason to invade us.  A human and Dwarf alliance would be just the thing they need.")
         elif conversation_choice==2:
             print("They have been one of the nations that have often been helpful to us when we needed it but they are also tired of fighting a war on three fronts so turning it into a 2 war front is massive for them.")
         elif conversation_choice==3:
-            print("King:  You will at Dusk")
+            print("King: You will at Dusk")
             break
         else:
-            print("Please choose a valid option")
+            assert False, f" bad {conversation_choice}"
 
     print(f"you rest until it is dusk then leave with the Princess.\n As you cross the boarders a group of orcs attack.")
 
     ## First Battle
     enemy_battlefield=10
-    while True:
+    def Fight(hero):
+        while hero.is_alive() and enemy_battlefield >= 0:
     
-        print(enemy_battlefield)
-        print(hero_health)
+            print(enemy_battlefield)
+            print(hero_health)
+            print(turn_counter)
+            if hero_health <= 0:
+                print("You have been beaten back and the princess kidnapped.  You now must go rescue her.")
+                break
+            if enemy_battlefield ==0:
+                print("You have beaten them back! Now enjoy and continue")
+                break
 
-        if hero_health <= 0:
-            print("You have been beaten back and the princess kidnapped.  You now must go rescue her.")
-            break
-        if enemy_battlefield ==0:
-            print("You have beaten them back! Now enjoy and continue")
-            break
+            battle_discussion=input_choices(["Ranged Attack", "Melee Attack", "Discussion", "Defend"])
 
-        battle_discussion=int(input(" 1-Ranged Attack \n 2-Melee Attack \n 3-Discussion \n 4-Defend \n 5-Run \n"))
-        if battle_discussion==1:
-            range_attack=hero_bow_bonus+random.randrange(100)
-            if range_attack >= 10:
-                    enemy_battlefield-=1
-            enemy_attack=random.randrange(100)
-            if enemy_attack >= 50:
-                hero_health -=15
+            if battle_discussion==1:
 
-        if battle_discussion==2:
-            melee_attack=hero_sword_bonus+random.randrange(100)
-            if melee_attack >= 60:
-                    enemy_battlefield-=1
-            enemy_attack=random.randrange(100)
-            if enemy_attack >= 50:
-                hero_health -=15
+                hero.equip(bow)
+                hero.attack(enemy_battlefield)
+                range_attack=hero_bow_bonus+random.randrange(100)
+                if range_attack >= 10:
+                        enemy_battlefield-=1
+                if enemy_battlefield ==0:
+                    print("You have beaten them back! Now enjoy and continue")
+                    break
 
-        if battle_discussion==3:
-            discussion_attack=hero_char+random.randrange(100)
-            if discussion_attack >= 60:
-                    enemy_battlefield-=1
+                enemy_attack=random.randrange(100)
+                if enemy_attack >= 50:
+                    hero_health -=15
 
-            enemy_attack=random.randrange(100)
-            if enemy_attack >= 50:
-                hero_health -=15
+            if battle_discussion==2:
+                melee_attack=hero_sword_bonus+random.randrange(100)
+                if melee_attack >= 60:
+                        enemy_battlefield-=1
+                if enemy_battlefield ==0:
+                    print("You have beaten them back! Now enjoy and continue")
+                    break
+                enemy_attack=random.randrange(100)
+                if enemy_attack >= 50:
+                    hero_health -=15
 
-        if battle_discussion==4:
-            enemy_attack=random.randrange(100)
-            if enemy_attack >= 75:
-                hero_health -=15
+            if battle_discussion==3:
+                discussion_attack=hero_char+random.randrange(100)
+                if discussion_attack >= 60:
+                        enemy_battlefield-=1
+                if enemy_battlefield ==0:
+                    print("You have beaten them back! Now enjoy and continue")
+                    break
+                enemy_attack=random.randrange(100)
+                if enemy_attack >= 50:
+                    hero_health -=15
+
+            if battle_discussion==4:
+                enemy_attack=random.randrange(100)
+                if enemy_attack >= 75:
+                    hero_health -=15
+                else:
+                    print("You have succesfully defended agsint their attacks. ")
+           
+            if battle_discussion<1 or battle_discussion>5:
+                print("This is not an option")
             else:
-                print("You have succesfully defended agsint their attacks. ")
-
-        if battle_discussion==5:
-            print("no where to go in this battle")
-
-        if battle_discussion<1 or battle_discussion>5:
-            print("This is not an option")
-
-main()
+                assert False, "Bug Here"
 
 
 
+    print("You have been beaten back and the princess kidnapped. Your Journey ends here.")
+
+main()   
 
 

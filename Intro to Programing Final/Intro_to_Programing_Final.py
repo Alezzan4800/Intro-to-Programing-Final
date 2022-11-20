@@ -1,6 +1,14 @@
 import random
-## This is the global verables
+## This is the global verables, classes, and fuctions
 
+def main():
+    quit = False
+    while not quit:
+        starting_options = input_choices("Tales of the Drageons:", ['start game', 'quit game'])
+        if starting_options == 1:
+            start_story()
+        elif starting_options == 2:
+            quit = True
 class Hero:
     def __init__(self, name, strength, charisma, intelligence, vitality, melee_bonus, range_bonus, gold, orc_relationship, elf_relationship, dwarf_realtionship, human_relationship, hit_points, level):
         self.name= name
@@ -162,8 +170,44 @@ def input_number(prompt, min, max):
                 break
         print(f"Invalid input must be between {min} and {max} ")
     return selection 
+def fight(hero, enemy_combatants):
+    turn_counter = 1
+    while hero.get_stat('hit_points') > 0 and (enemy_combatants.melee_enemies > 0 or enemy_combatants.ranged_enemies > 0):
+        total_enemies_remaining = enemy_combatants.melee_enemies + enemy_combatants.ranged_enemies
+        print("Total enemies remaining", total_enemies_remaining, "Melee", enemy_combatants.melee_enemies, "Ranged", enemy_combatants.ranged_enemies)
+        print("Your hit points remaining", hero.get_stat('hit_points'))
+        print("It is turn ",turn_counter)
+        turn_counter += 1
+        battle_discussion=input_choices("",["Ranged Attack on Ranged Enemies", "Melee Attack on Melee Enemies","Ranged Attack on Melee Enemies", "Melee Attack on Ranged enemies", "Discussion", "Heal"])
+        if battle_discussion==1:
+            hero.equip(bow)
+            hero.attack(enemy_combatants, False)
+            enemy_combatants.attack(hero)
+        elif battle_discussion==2:
+            hero.equip(sword)
+            hero.attack(enemy_combatants, True)
+            enemy_combatants.attack(hero)
+        elif battle_discussion==3:
+            hero.equip(bow)
+            hero.attack(enemy_combatants, True)
+            enemy_combatants.attack(hero)
+        elif battle_discussion==4:
+            hero.equip(sword)
+            hero.attack(enemy_combatants, False)
+            enemy_combatants.attack(hero)
+        elif battle_discussion==5:
+            talking_enemies_out_of_fight = hero.get_stat('charisma')+random.randrange(100)
+            if talking_enemies_out_of_fight >= 60:
+                    enemy_combatants.melee_enemies -= 1
+                    enemy_combatants.ranged_enemies -= 1
+            enemy_combatants.attack(hero)
+        elif battle_discussion==6:
+            hero.add_stat('hit_points', 25)                
+            enemy_combatants.attack(hero)                                                      
+def hero_wins():
+        print(f'After traveling for another long 5 days.  Finally deliver the princess. The Marrage would go off without a hitch, with the Dwarves and Humans united the war would soon end.')
 ## Story Starts
-def main():
+def start_story():
     print(
     f"The Continent of Silthia was broken into 4 different kingdoms.  These Kingdoms were: The Gorthomons (Dwarfs) , The Warsong(Orcs), The Timberwolfs(Elfs), and Foxborough(Humans).\n"  
     f"Foxborough while quite advanced for their race and sees themselves quite highly the rest of the Continent The Vulpigs.  The nations had been at war with each other for millennia.\n" 
@@ -239,48 +283,17 @@ def main():
 
     ## First Battle
     enemy_combatants = Enemy_Battlefield(5,5,50,50)
+    fight(hero, enemy_combatants)
+    if hero.get_stat('hit_points') <= 0:
+        print("You have been killed and the princess kidnapped. Your Journey ends here.")
+    else:
+        print("You have beaten them back! Now enjoy and continue")
+        hero_wins()
 
-    def Fight(hero, enemy_combatants):
-        turn_counter = 1
-        while hero.get_stat('hit_points') > 0 and (enemy_combatants.melee_enemies > 0 or enemy_combatants.ranged_enemies > 0):
-            total_enemies_remaining = enemy_combatants.melee_enemies + enemy_combatants.ranged_enemies
-            print("Total enemies remaining", total_enemies_remaining, "Melee", enemy_combatants.melee_enemies, "Ranged", enemy_combatants.ranged_enemies)
-            print("Your hit points remaining", hero.get_stat('hit_points'))
-            print("It is turn ",turn_counter)
-            turn_counter += 1
-            battle_discussion=input_choices("",["Ranged Attack on Ranged Enemies", "Melee Attack on Melee Enemies","Ranged Attack on Melee Enemies", "Melee Attack on Ranged enemies", "Discussion", "Heal"])
-            if battle_discussion==1:
-                hero.equip(bow)
-                hero.attack(enemy_combatants, False)
-                enemy_combatants.attack(hero)
-            elif battle_discussion==2:
-                hero.equip(sword)
-                hero.attack(enemy_combatants, True)
-                enemy_combatants.attack(hero)
-            elif battle_discussion==3:
-                hero.equip(bow)
-                hero.attack(enemy_combatants, True)
-                enemy_combatants.attack(hero)
-            elif battle_discussion==4:
-                hero.equip(sword)
-                hero.attack(enemy_combatants, False)
-                enemy_combatants.attack(hero)
-            elif battle_discussion==5:
-                talking_enemies_out_of_fight = hero.get_stat('charisma')+random.randrange(100)
-                if talking_enemies_out_of_fight >= 60:
-                        enemy_combatants.melee_enemies -= 1
-                        enemy_combatants.ranged_enemies -= 1
-                enemy_combatants.attack(hero)
-            elif battle_discussion==6:
-                hero.add_stat('hit_points', 25)                
-                enemy_combatants.attack(hero)                                                      
-        if hero.get_stat('hit_points') <= 0:
-            print("You have been killed and the princess kidnapped. Your Journey ends here.")
-        else:
-            print("You have beaten them back! Now enjoy and continue")
 
-    Fight(hero, enemy_combatants)
 
-main()   
+main()
+
+
 
 
